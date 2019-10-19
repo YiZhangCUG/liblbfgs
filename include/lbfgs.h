@@ -29,10 +29,12 @@
 #ifndef __LBFGS_H__
 #define __LBFGS_H__
 
-#ifdef  __cplusplus
+#ifdef  __cplusplus //c++编译环境中才会定义__cplusplus (plus就是"+"的意思)
+//作用是让 C++ 编译器将 extern "C" 声明的代码当作 C 语言代码处理，可以避免 C++ 因符号修饰导致代码不能和C语言库中的符号进行链接的问题。
 extern "C" {
 #endif/*__cplusplus*/
 
+// 算法库使用的浮点类型定义
 /*
  * The default precision of floating point values is 64bit (double).
  */
@@ -58,7 +60,8 @@ typedef double lbfgsfloatval_t;
 
 #endif
 
-
+// 枚举类型 lbfgs()返回值 定义了各种返回值对应的别称
+// 返回值为负代表错误
 /** 
  * \addtogroup liblbfgs_api libLBFGS API
  * @{
@@ -75,16 +78,16 @@ enum {
     /** L-BFGS reaches convergence. */
     LBFGS_SUCCESS = 0,
     LBFGS_CONVERGENCE = 0,
-    LBFGS_STOP,
+    LBFGS_STOP, //1
     /** The initial variables already minimize the objective function. */
-    LBFGS_ALREADY_MINIMIZED,
+    LBFGS_ALREADY_MINIMIZED, //2
 
     /** Unknown error. */
     LBFGSERR_UNKNOWNERROR = -1024,
     /** Logic error. */
-    LBFGSERR_LOGICERROR,
+    LBFGSERR_LOGICERROR, //-1023
     /** Insufficient memory. */
-    LBFGSERR_OUTOFMEMORY,
+    LBFGSERR_OUTOFMEMORY, //-1022
     /** The minimization process has been canceled. */
     LBFGSERR_CANCELED,
     /** Invalid number of variables specified. */
@@ -146,6 +149,11 @@ enum {
     LBFGSERR_INCREASEGRADIENT,
 };
 
+// 枚举类型 线性搜索方法
+// 0 MoreThuente方法
+// 1 Armijo条件方法
+// 2 标准Wolfe条件方法
+// 3 增强Wolfe条件方法
 /**
  * Line search algorithms.
  */
@@ -190,6 +198,24 @@ enum {
     LBFGS_LINESEARCH_BACKTRACKING_STRONG_WOLFE = 3,
 };
 
+// L-BFGS参数类型。参数很多，简要说明如下：
+// m L-BFGS算法中储存的前序sk与yk向量个数，这个值控制了算法使用的内存多少，默认值为6（不建议小于3的值），值多大近似精度越高，计算量也越大。
+// epsilon 迭代的终止精度，默认值为1e-5
+// past 以delta(不同迭代次数的目标函数值)为基础的迭代终止条件数，past代表了以多少迭代次数之前的目标函数值作为delta计算的间隔，默认值为0，
+//      即不以delta为迭代终止条件。
+// delta (f' - f) / f 不同迭代次数时目标函数之差与当前目标函数值之比，但past不为0时会计算。
+// max_iterations 最大迭代次数
+// linesearch 线性搜索方式，由此文件上部枚举类型定义。
+// max_linesearch 每次迭代中线性搜索的最大次数，默认值为40
+// min_step 线性搜索中的最小步长，默认值为1e-20
+// max_step 线性搜索中的最大步长，默认值为1e+20
+// ftol 线性搜索的精度值，默认值为1e-4，取值范围（0-0.5）。
+// wolfe Wolfe线性搜索中的控制参数，默认值为0.9，大于ftol小于1.0
+// gtol 线性搜索中的控制参数，默认值为0.9，大于ftol小于1.0
+// xtol 浮点数精度，默认值为1e-16
+// orthantwise_c 模型参数x的L1模的乘积参数，默认值为0.0，此时算法即为L2模形式，当此参数大于0时，算法即为OWL-QN
+// orthantwise_start 开始计算模型参数x的L1模的迭代序号
+// orthantwise_end 终止计算模型参数x的L1模的迭代序号
 /**
  * L-BFGS optimization parameters.
  *  Call lbfgs_parameter_init() function to initialize parameters to the
@@ -357,7 +383,13 @@ typedef struct {
     int             orthantwise_end;
 } lbfgs_parameter_t;
 
-
+// 目标函数与其梯度值计算的回调函数模版，参数简要说明如下：
+// instance 运行实例的指针，帮助程序正确定位回调函数在内存中的位置。
+// x 当前的模型参数值的指针
+// g 当前模型参数值对应的梯度指针
+// n 模型参数的数量
+// step 当前线性搜索所使用的步长
+// retval 当前模型参数的目标函数值
 /**
  * Callback interface to provide objective function and gradient evaluations.
  *
@@ -383,6 +415,18 @@ typedef lbfgsfloatval_t (*lbfgs_evaluate_t)(
     const lbfgsfloatval_t step
     );
 
+// 进程函数的回调函数模版，参数简要说明如下：
+// instance 运行实例的指针，帮助程序正确定位回调函数在内存中的位置。
+// x 当前的模型参数值的指针
+// g 当前模型参数值对应的梯度指针
+// fx 目标函数的值
+// xnorm 模型参数数组的L2模长
+// gnorm 模型梯度数组的L2模长
+// step 当前线性搜索所使用的步长
+// n 模型参数的数量
+// k 迭代的次数
+// ls 此次迭代所使用的线性搜索次数
+// retval 返回0则lbfgs()函数继续，否则终止
 /**
  * Callback interface to receive the progress of the optimization process.
  *
@@ -425,6 +469,10 @@ value, ||G||, etc) and to cancel the iteration process if necessary.
 Implementation of a progress callback is optional: a user can pass \c NULL if
 progress notification is not necessary.
 
+// 这里提出了算法使用中的两个要求
+// 1. 变量的数量必须是16的倍数
+// 2. 变量的储存以16对齐
+// 还不太明白为什么要这么要求。这里需要以后再注解。
 In addition, a user must preserve two requirements:
     - The number of variables must be multiples of 16 (this is not 4).
     - The memory block of variable array ::x must be aligned to 16.
@@ -437,6 +485,23 @@ when:
 In this formula, ||.|| denotes the Euclidean norm.
 */
 
+// 下面是L-BFGS的主函数，各个参数的说明简要翻译如下：
+// n 数组的长度，也就是待求的模型参数的数量
+// x 模型参数数组的指针，函数通过指针直接操作模型数组，所以不需要返回计算结果。一开始赋给函数的数组即为
+//   初始模型，函数结束后即为最优化结果
+// ptr_fx 目标函数的值的指针，设计成指针可以方便在函数外部监控迭代过程的收敛情况
+// proc_evaluate 计算目标函数与目标函数相对于模型的导数的函数名称。这个函数在实际使用中需要用户按照
+//               算法库指定的参数形式自行定义。函数功能即为计算非线性最优化问题的目标函数值与相应的
+//               模型梯度。L-BFGS将利用这两个量来计算雅各比与近似海森矩阵，进而确定迭代的方向与步长。
+// proc_progress 接收迭代过程指标参数的函数名称，这个函数的作为即方便用户以自定义的形式为迭代过程进行
+//               监控或显示。
+// instance 函数执行时的实例对象，将被proc_evaluate函数与proc_progress函数接收。这个变量的存在
+//          是由于如果回调函数是类的成员函数时无法直接调用，需要通过定义一个静态的类成员函数作为新的回调函数
+//          来调用回调函数。但是类内的函数指针调用只能通过实例进行，所以必然需要一个空的指针来指向运行时的实例。
+//          而这个指针也就一路来到了这里，它的作用就是在运行时帮助程序确定回调函数在内存的位置以保证正确的调用。
+// param L-BFGS算法参数类型的指针，指向一个包含算法运行需要的参数的结构体。
+// retval 返回值。无错即为0，非0值代表此文件上部枚举类型中的对应错误。此文件下部定义的错误信息显示即利用此返回值与
+//        预定义的枚举类型输出相应的错误信息。
 /**
  * Start a L-BFGS optimization.
  *
@@ -484,6 +549,8 @@ int lbfgs(
     lbfgs_parameter_t *param
     );
 
+// 将一个参数类型内的全部变量值重置为默认值
+// 如果害怕参数被自己调乱了可以用这个函数将参数充值
 /**
  * Initialize L-BFGS parameters to the default values.
  *
@@ -494,6 +561,7 @@ int lbfgs(
  */
 void lbfgs_parameter_init(lbfgs_parameter_t *param);
 
+// 开辟浮点类型的数组空间
 /**
  * Allocate an array for variables.
  *
@@ -507,6 +575,7 @@ void lbfgs_parameter_init(lbfgs_parameter_t *param);
  */
 lbfgsfloatval_t* lbfgs_malloc(int n);
 
+// 释放浮点类型的数组空间
 /**
  * Free an array of variables.
  *  
@@ -515,6 +584,8 @@ lbfgsfloatval_t* lbfgs_malloc(int n);
  */
 void lbfgs_free(lbfgsfloatval_t *x);
 
+// 使用lbfgs()函数的返回值被返回一个包含相应错误信息的字符串。
+// 锦上添花，不是必要的部分。
 /**
  * Get string description of an lbfgs() return code.
  *
@@ -523,7 +594,7 @@ void lbfgs_free(lbfgsfloatval_t *x);
 const char* lbfgs_strerror(int err);
 
 /** @} */
-
+// 这里链接头文件开始位置的声明，保证了整个头文件都会以C的形式被编译
 #ifdef  __cplusplus
 }
 #endif/*__cplusplus*/

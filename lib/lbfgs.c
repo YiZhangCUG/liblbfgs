@@ -640,6 +640,13 @@ lbfgs_exit:
     return ret;
 }
 
+/**
+ * @brief      返回一个包含错误信息的字符串
+ *
+ * @param[in]  err   lbfgs()函数的返回值
+ *
+ * @return     错误信息字符串
+ */
 const char* lbfgs_strerror(int err)
 {
     switch(err) {
