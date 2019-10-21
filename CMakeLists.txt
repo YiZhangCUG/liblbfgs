@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.15.2)
 # 如果你使用别的编译器，请在这里修改
 set(CMAKE_CXX_COMPILER /usr/local/bin/g++-9)
 # 设置工程名称和语言
-project(LIBLBFGS VERSION 1.1.0 LANGUAGES CXX)
+project(LIBLBFGS VERSION 1.0.0 LANGUAGES CXX)
 # 设置安装地址
 set(CMAKE_INSTALL_PREFIX /usr/local)
 # 添加编译选项
