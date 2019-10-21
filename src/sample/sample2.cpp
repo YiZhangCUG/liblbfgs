@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <lbfgs.h>
+#include "../lib/lbfgs.h"
 
 class objective_function
 {
@@ -119,7 +119,7 @@ protected:
 
 #define N   100
 
-int main(int argc, char *argv)
+int main(int argc, char *argv[])
 {
     objective_function obj;
     return obj.run(N);
