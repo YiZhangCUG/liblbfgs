@@ -7,8 +7,9 @@ project(LIBLBFGS VERSION 1.1.0 LANGUAGES CXX)
 # 设置安装地址
 set(CMAKE_INSTALL_PREFIX /usr/local)
 # 添加编译选项
-option(LCG_FABS "use lcg's fabs" ON)
-option(LCG_OPENMP "use openmp" ON)
+option(HAVE_CONFIG_H "use config.h" ON)
+option(_MSC_VER "use __msc_ver" OFF)
+option(USE_SSE "use see" OFF)
 # 加入一个头文件配置，让cmake对源码进行操作
 configure_file(
   "${PROJECT_SOURCE_DIR}/config.h.in"
