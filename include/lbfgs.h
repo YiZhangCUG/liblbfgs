@@ -473,6 +473,7 @@ progress notification is not necessary.
 // 1. 变量的数量必须是16的倍数
 // 2. 变量的储存以16对齐
 // 还不太明白为什么要这么要求。这里需要以后再注解。
+// 注解：貌似只有使用SEE
 In addition, a user must preserve two requirements:
     - The number of variables must be multiples of 16 (this is not 4).
     - The memory block of variable array ::x must be aligned to 16.
@@ -550,7 +551,7 @@ int lbfgs(
     );
 
 // 将一个参数类型内的全部变量值重置为默认值
-// 如果害怕参数被自己调乱了可以用这个函数将参数充值
+// 如果害怕参数被自己调乱了可以用这个函数将参数重置
 /**
  * Initialize L-BFGS parameters to the default values.
  *

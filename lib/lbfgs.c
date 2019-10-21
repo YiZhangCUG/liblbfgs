@@ -89,16 +89,16 @@ licence.
 #include "arithmetic_ansi.h"
 
 #endif
-
+//宏函数 比较几个数的大小
 #define min2(a, b)      ((a) <= (b) ? (a) : (b))
 #define max2(a, b)      ((a) >= (b) ? (a) : (b))
 #define max3(a, b, c)   max2(max2((a), (b)), (c));
-
+//回调函数数据类型
 struct tag_callback_data {
-    int n;
-    void *instance;
-    lbfgs_evaluate_t proc_evaluate;
-    lbfgs_progress_t proc_progress;
+    int n; // 变量的大小
+    void *instance; // 用户给出的运行实例
+    lbfgs_evaluate_t proc_evaluate; // 目标函数与模型梯度计算函数指针
+    lbfgs_progress_t proc_progress; // 迭代过程监控函数指针
 };
 typedef struct tag_callback_data callback_data_t;
 
@@ -106,10 +106,10 @@ struct tag_iteration_data {
     lbfgsfloatval_t alpha;
     lbfgsfloatval_t *s;     /* [n] */
     lbfgsfloatval_t *y;     /* [n] */
-    lbfgsfloatval_t ys;     /* vecdot(y, s) */
+    lbfgsfloatval_t ys;     /* vecdot(y, s) y与s的点积 */
 };
 typedef struct tag_iteration_data iteration_data_t;
-
+// 默认的迭代参数
 static const lbfgs_parameter_t _defparam = {
     6, 1e-5, 0, 1e-5,
     0, LBFGS_LINESEARCH_DEFAULT, 40,
@@ -118,7 +118,7 @@ static const lbfgs_parameter_t _defparam = {
 };
 
 /* Forward function declarations. */
-
+// 这里定义了线性搜索的函数类型模版 一下是几个具体的线性搜索函数的声明
 typedef int (*line_search_proc)(
     int n,
     lbfgsfloatval_t *x,
@@ -174,7 +174,8 @@ static int line_search_morethuente(
     callback_data_t *cd,
     const lbfgs_parameter_t *param
     );
-
+// 以上是线性搜索函数的声明
+// 试算测试步长
 static int update_trial_interval(
     lbfgsfloatval_t *x,
     lbfgsfloatval_t *fx,
@@ -189,13 +190,13 @@ static int update_trial_interval(
     const lbfgsfloatval_t tmax,
     int *brackt
     );
-
+// 计算x的L1模长
 static lbfgsfloatval_t owlqn_x1norm(
     const lbfgsfloatval_t* x,
     const int start,
     const int n
     );
-
+// 计算似模长
 static void owlqn_pseudo_gradient(
     lbfgsfloatval_t* pg,
     const lbfgsfloatval_t* x,
@@ -223,7 +224,7 @@ static int round_out_variables(int n)
     return n;
 }
 #endif/*defined(USE_SSE)*/
-
+// 开辟内存空间
 lbfgsfloatval_t* lbfgs_malloc(int n)
 {
 #if     defined(USE_SSE) && (defined(__SSE__) || defined(__SSE2__))
@@ -231,12 +232,12 @@ lbfgsfloatval_t* lbfgs_malloc(int n)
 #endif/*defined(USE_SSE)*/
     return (lbfgsfloatval_t*)vecalloc(sizeof(lbfgsfloatval_t) * n);
 }
-
+// 释放内存空间
 void lbfgs_free(lbfgsfloatval_t *x)
 {
     vecfree(x);
 }
-
+// 重置参数至默认参数
 void lbfgs_parameter_init(lbfgs_parameter_t *param)
 {
     memcpy(param, &_defparam, sizeof(*param));
@@ -257,7 +258,9 @@ int lbfgs(
     lbfgsfloatval_t step;
 
     /* Constant parameters and their default values. */
+    // 若无输入参数则使用默认参数
     lbfgs_parameter_t param = (_param != NULL) ? (*_param) : _defparam;
+    // m是计算海森矩阵时储存的前序向量大小
     const int m = param.m;
 
     lbfgsfloatval_t *xp = NULL;
@@ -268,6 +271,7 @@ int lbfgs(
     lbfgsfloatval_t xnorm, gnorm, beta;
     lbfgsfloatval_t fx = 0.;
     lbfgsfloatval_t rate = 0.;
+    // 设置线性搜索函数为morethuente，此处line_search_morethuente为函数名
     line_search_proc linesearch = line_search_morethuente;
 
     /* Construct a callback data. */
@@ -334,11 +338,13 @@ int lbfgs(
         return LBFGSERR_INVALID_ORTHANTWISE_START;
     }
     if (param.orthantwise_end < 0) {
+        // 默认设置在每个迭代都计算L1模
         param.orthantwise_end = n;
     }
     if (n < param.orthantwise_end) {
         return LBFGSERR_INVALID_ORTHANTWISE_END;
     }
+    // 若|x|的参数不是0，则检查线性搜索方法
     if (param.orthantwise_c != 0.) {
         switch (param.linesearch) {
         case LBFGS_LINESEARCH_BACKTRACKING:
@@ -362,7 +368,7 @@ int lbfgs(
             return LBFGSERR_INVALID_LINESEARCH;
         }
     }
-
+    // 初始化数组
     /* Allocate working space. */
     xp = (lbfgsfloatval_t*)vecalloc(n * sizeof(lbfgsfloatval_t));
     g = (lbfgsfloatval_t*)vecalloc(n * sizeof(lbfgsfloatval_t));
@@ -373,7 +379,7 @@ int lbfgs(
         ret = LBFGSERR_OUTOFMEMORY;
         goto lbfgs_exit;
     }
-
+    // 初始化计算L1模的数组
     if (param.orthantwise_c != 0.) {
         /* Allocate working space for OW-LQN. */
         pg = (lbfgsfloatval_t*)vecalloc(n * sizeof(lbfgsfloatval_t));
@@ -382,7 +388,7 @@ int lbfgs(
             goto lbfgs_exit;
         }
     }
-
+    // 初始化有限内存方法需要的空间
     /* Allocate limited memory storage. */
     lm = (iteration_data_t*)vecalloc(m * sizeof(iteration_data_t));
     if (lm == NULL) {
@@ -392,7 +398,7 @@ int lbfgs(
 
     /* Initialize the limited memory. */
     for (i = 0;i < m;++i) {
-        it = &lm[i];
+        it = &lm[i]; // 取it的地址为lm数组中的一个
         it->alpha = 0;
         it->ys = 0;
         it->s = (lbfgsfloatval_t*)vecalloc(n * sizeof(lbfgsfloatval_t));
@@ -407,20 +413,22 @@ int lbfgs(
     if (0 < param.past) {
         pf = (lbfgsfloatval_t*)vecalloc(param.past * sizeof(lbfgsfloatval_t));
     }
-
+    // 到此所有初始化工作完成 下面开始迭代前的初始计算
     /* Evaluate the function value and its gradient. */
-    fx = cd.proc_evaluate(cd.instance, x, g, cd.n, 0);
+    fx = cd.proc_evaluate(cd.instance, x, g, cd.n, 0); // 步长为0，现在用不了
+    // 若|x|参数不为0 则需要计算x的L1模与似梯度
     if (0. != param.orthantwise_c) {
         /* Compute the L1 norm of the variable and add it to the object value. */
         xnorm = owlqn_x1norm(x, param.orthantwise_start, param.orthantwise_end);
-        fx += xnorm * param.orthantwise_c;
+        fx += xnorm * param.orthantwise_c; // 此时fx为这两部分的和
         owlqn_pseudo_gradient(
             pg, x, g, n,
             param.orthantwise_c, param.orthantwise_start, param.orthantwise_end
-            );
+            ); // 计算似梯度
     }
 
     /* Store the initial value of the objective function. */
+    // 如果param.past不为0，则pf不为NULL
     if (pf != NULL) {
         pf[0] = fx;
     }
@@ -429,22 +437,26 @@ int lbfgs(
         Compute the direction;
         we assume the initial hessian matrix H_0 as the identity matrix.
      */
+    // 初始下降方向为梯度的反方向
     if (param.orthantwise_c == 0.) {
-        vecncpy(d, g, n);
+        vecncpy(d, g, n); //拷贝数组 并反号（乘-1）
     } else {
-        vecncpy(d, pg, n);
+        vecncpy(d, pg, n); //此时需拷贝似梯度 并反号（乘-1）
     }
 
     /*
        Make sure that the initial variables are not a minimizer.
      */
-    vec2norm(&xnorm, x, n);
+    vec2norm(&xnorm, x, n); // vec2norm计算数组的L2模长
+    // 此段又要区别对待是否含有L1模的部分
     if (param.orthantwise_c == 0.) {
         vec2norm(&gnorm, g, n);
     } else {
         vec2norm(&gnorm, pg, n);
     }
+    // 为啥要保证xnorm大于等于1？不明白
     if (xnorm < 1.0) xnorm = 1.0;
+    // 如果输入x即为最优化的解 则退出
     if (gnorm / xnorm <= param.epsilon) {
         ret = LBFGS_ALREADY_MINIMIZED;
         goto lbfgs_exit;
@@ -453,7 +465,8 @@ int lbfgs(
     /* Compute the initial step:
         step = 1.0 / sqrt(vecdot(d, d, n))
      */
-    vec2norminv(&step, d, n);
+    // 计算估算的初始步长
+    vec2norminv(&step, d, n); // 计算数组L2模的倒数，与注释的内容等效
 
     k = 1;
     end = 0;
@@ -472,6 +485,7 @@ int lbfgs(
                 param.orthantwise_c, param.orthantwise_start, param.orthantwise_end
                 );
         }
+        // 线性搜索错误 此时则退回到上一次迭代的位置并退出
         if (ls < 0) {
             /* Revert to the previous point. */
             veccpy(x, xp, n);
@@ -490,6 +504,7 @@ int lbfgs(
 
         /* Report the progress. */
         if (cd.proc_progress) {
+            // 如果监控函数返回值不为0 则退出迭过程
             if ((ret = cd.proc_progress(cd.instance, x, g, fx, xnorm, gnorm, step, cd.n, k, ls))) {
                 goto lbfgs_exit;
             }
@@ -535,13 +550,14 @@ int lbfgs(
             break;
         }
 
+        // 以下是L-BFGS算法的核心部分
         /*
             Update vectors s and y:
                 s_{k+1} = x_{k+1} - x_{k} = \step * d_{k}.
                 y_{k+1} = g_{k+1} - g_{k}.
          */
         it = &lm[end];
-        vecdiff(it->s, x, xp, n);
+        vecdiff(it->s, x, xp, n); // 计算两个数组的差 it->s = x - xp
         vecdiff(it->y, g, gp, n);
 
         /*
@@ -550,7 +566,7 @@ int lbfgs(
                 yy = y^t \cdot y.
             Notice that yy is used for scaling the hessian matrix H_0 (Cholesky factor).
          */
-        vecdot(&ys, it->y, it->s, n);
+        vecdot(&ys, it->y, it->s, n); // 计算两个数组的点积
         vecdot(&yy, it->y, it->y, n);
         it->ys = ys;
 
@@ -569,11 +585,11 @@ int lbfgs(
         /* Compute the steepest direction. */
         if (param.orthantwise_c == 0.) {
             /* Compute the negative of gradients. */
-            vecncpy(d, g, n);
+            vecncpy(d, g, n); // 注意这里有符号的翻转
         } else {
             vecncpy(d, pg, n);
         }
-
+        // 此处开始迭代
         j = end;
         for (i = 0;i < bound;++i) {
             j = (j + m - 1) % m;    /* if (--j == -1) j = m-1; */
@@ -585,7 +601,7 @@ int lbfgs(
             vecadd(d, it->y, -it->alpha, n);
         }
 
-        vecscale(d, ys / yy, n);
+        vecscale(d, ys / yy, n); // 适当缩放d的大小
 
         for (i = 0;i < bound;++i) {
             it = &lm[j];
@@ -808,7 +824,7 @@ static int line_search_backtracking(
         ++count;
 
         if (*f > finit + *stp * dgtest) {
-            width = dec;
+            width = dec; //减小步长
         } else {
             /* The sufficient decrease condition (Armijo condition). */
             if (param->linesearch == LBFGS_LINESEARCH_BACKTRACKING_ARMIJO) {
@@ -819,7 +835,7 @@ static int line_search_backtracking(
 	        /* Check the Wolfe condition. */
 	        vecdot(&dg, g, s, n);
 	        if (dg < param->wolfe * dginit) {
-    		    width = inc;
+    		    width = inc; //增大步长
 	        } else {
 		        if(param->linesearch == LBFGS_LINESEARCH_BACKTRACKING_WOLFE) {
 		            /* Exit with the regular Wolfe condition. */
@@ -828,7 +844,7 @@ static int line_search_backtracking(
 
 		        /* Check the strong Wolfe condition. */
 		        if(dg > -param->wolfe * dginit) {
-		            width = dec;
+		            width = dec; //减小步长
 		        } else {
 		            /* Exit with the strong Wolfe condition. */
 		            return count;
@@ -1414,7 +1430,7 @@ static int update_trial_interval(
 
 
 
-
+// 计算x的L1模 计算从start到n的绝对值的和
 static lbfgsfloatval_t owlqn_x1norm(
     const lbfgsfloatval_t* x,
     const int start,
