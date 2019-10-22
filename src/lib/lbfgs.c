@@ -514,6 +514,9 @@ int lbfgs(
             Convergence test.
             The criterion is given by the following formula:
                 |g(x)| / \max(1, |x|) < \epsilon
+                这里稍微解释一下：这个标准的含义是此时的模型梯度模与模型模的比值，这个值在模型变化非常平缓时会很小，一般我们认为此时也就达到了最优。
+                因此如果x的模小于1的话反而会放大模型梯度的模，所以这里默认x的模长大于等于1.0。同样的，可以预见对于求0值的非线性最优化问题，这个标准
+                并不适用，因为目标函数在0值的梯度很可能不是0。
          */
         if (xnorm < 1.0) xnorm = 1.0;
         if (gnorm / xnorm <= param.epsilon) {
@@ -526,6 +529,7 @@ int lbfgs(
             Test for stopping criterion.
             The criterion is given by the following formula:
                 |(f(past_x) - f(x))| / f(x) < \delta
+                利用之前的目标函数值与当前目标函数值之差的绝对值与当前函数值的比值来确定是否终止迭代。与前一种判断方式一样，不适合求0的最优化问题。
          */
         if (pf != NULL) {
             /* We don't test the stopping criterion while k < past. */
@@ -589,7 +593,7 @@ int lbfgs(
         } else {
             vecncpy(d, pg, n);
         }
-        // 此处开始迭代
+        // 此处开始迭代 利用双重循环计算H^-1*g得到下降方向
         j = end;
         for (i = 0;i < bound;++i) {
             j = (j + m - 1) % m;    /* if (--j == -1) j = m-1; */
