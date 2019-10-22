@@ -40,3 +40,10 @@ add_executable(lbfgs_sample2 sample/sample2.cpp)
 set_target_properties(lbfgs_sample2 PROPERTIES INSTALL_RPATH "/usr/local/lib")
 # 链接动态库
 target_link_libraries(lbfgs_sample2 PUBLIC lbfgs)
+
+# 添加可执行文件 命令行
+add_executable(lbfgs_sample3 sample/sample3.cpp)
+# 为安装文件添加动态库的搜索地址
+set_target_properties(lbfgs_sample3 PROPERTIES INSTALL_RPATH "/usr/local/lib")
+# 链接动态库
+target_link_libraries(lbfgs_sample3 PUBLIC lbfgs)

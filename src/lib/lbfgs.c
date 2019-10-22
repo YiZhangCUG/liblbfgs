@@ -777,7 +777,7 @@ const char* lbfgs_strerror(int err)
     }
 }
 
-
+// 反向搜索，即根据一个初值时情况增大或减小步长
 static int line_search_backtracking(
     int n,
     lbfgsfloatval_t *x,
@@ -803,7 +803,7 @@ static int line_search_backtracking(
     }
 
     /* Compute the initial gradient in the search direction. */
-    vecdot(&dginit, g, s, n);
+    vecdot(&dginit, g, s, n); //计算点积 g为梯度方向 s为下降方向
 
     /* Make sure that s points to a descent direction. */
     if (0 < dginit) {
@@ -812,20 +812,23 @@ static int line_search_backtracking(
 
     /* The initial value of the objective function. */
     finit = *f;
-    dgtest = param->ftol * dginit;
+    dgtest = param->ftol * dginit; // ftol 大概为 function tolerance
 
     for (;;) {
         veccpy(x, xp, n);
-        vecadd(x, s, *stp, n);
+        vecadd(x, s, *stp, n); // vecadd x += (*stp)*s
 
         /* Evaluate the function and gradient values. */
+        // 这里我们发现的cd的用法，即传递函数指针
         *f = cd->proc_evaluate(cd->instance, x, g, cd->n, *stp);
 
         ++count;
 
+        // 充分下降条件
         if (*f > finit + *stp * dgtest) {
-            width = dec; //减小步长
+            width = dec; //如果不满充分下降条件则减小步长
         } else {
+            // 充分下降条件满足并搜索方法为backtracking，搜索条件为Armijo，则可以退出了。否则更新步长，继续搜索。
             /* The sufficient decrease condition (Armijo condition). */
             if (param->linesearch == LBFGS_LINESEARCH_BACKTRACKING_ARMIJO) {
                 /* Exit with the Armijo condition. */
@@ -833,10 +836,11 @@ static int line_search_backtracking(
 	        }
 
 	        /* Check the Wolfe condition. */
-	        vecdot(&dg, g, s, n);
+	        vecdot(&dg, g, s, n); // 验证标准Wolfe条件 需要计算新的梯度信息
 	        if (dg < param->wolfe * dginit) {
-    		    width = inc; //增大步长
+    		    width = inc; //注意这里dginit一般是负的，所以在测试Wolfe条件时上式为下限。不满足标准Wolfe条件，增大步长。
 	        } else {
+                // 标准Wolfe条件满足，且搜索方法为backtracking，搜索条件为Wolfe，则可以退出了。否则继续测试是否满足Strong Wolfe
 		        if(param->linesearch == LBFGS_LINESEARCH_BACKTRACKING_WOLFE) {
 		            /* Exit with the regular Wolfe condition. */
 		            return count;
@@ -844,7 +848,7 @@ static int line_search_backtracking(
 
 		        /* Check the strong Wolfe condition. */
 		        if(dg > -param->wolfe * dginit) {
-		            width = dec; //减小步长
+		            width = dec; //不满足曲率的绝对值条件，减小步长。
 		        } else {
 		            /* Exit with the strong Wolfe condition. */
 		            return count;
@@ -852,16 +856,20 @@ static int line_search_backtracking(
             }
         }
 
+        // 以下情况返回的步长不能保证满足搜索条件
         if (*stp < param->min_step) {
             /* The step is the minimum value. */
+            // 退出 此时步长小于最小步长
             return LBFGSERR_MINIMUMSTEP;
         }
         if (*stp > param->max_step) {
             /* The step is the maximum value. */
+            // 退出 此时步长大于最大步长
             return LBFGSERR_MAXIMUMSTEP;
         }
         if (param->max_linesearch <= count) {
             /* Maximum number of iteration. */
+            // 退出 线性搜索次数超过了最大限制
             return LBFGSERR_MAXIMUMLINESEARCH;
         }
 
@@ -869,8 +877,7 @@ static int line_search_backtracking(
     }
 }
 
-
-
+// 还是反向搜索 只是添加了L1模方向
 static int line_search_backtracking_owlqn(
     int n,
     lbfgsfloatval_t *x,
@@ -880,7 +887,7 @@ static int line_search_backtracking_owlqn(
     lbfgsfloatval_t *stp,
     const lbfgsfloatval_t* xp,
     const lbfgsfloatval_t* gp,
-    lbfgsfloatval_t *wp,
+    lbfgsfloatval_t *wp, // 这个数组只在这个函数内使用
     callback_data_t *cd,
     const lbfgs_parameter_t *param
     )
