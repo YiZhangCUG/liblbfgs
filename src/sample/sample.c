@@ -30,6 +30,7 @@ static int progress(
     const lbfgsfloatval_t xnorm,
     const lbfgsfloatval_t gnorm,
     const lbfgsfloatval_t step,
+    const lbfgs_parameter_t param,
     int n,
     int k,
     int ls

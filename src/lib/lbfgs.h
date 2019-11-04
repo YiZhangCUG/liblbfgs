@@ -441,6 +441,7 @@ typedef lbfgsfloatval_t (*lbfgs_evaluate_t)(
  *  @param  xnorm       The Euclidean norm of the variables.
  *  @param  gnorm       The Euclidean norm of the gradients.
  *  @param  step        The line-search step used for this iteration.
+ *  @param  param       这是我们添加了一个指针以使用参数类型来监控迭代流程
  *  @param  n           The number of variables.
  *  @param  k           The iteration count.
  *  @param  ls          The number of evaluations called for this iteration.
@@ -455,6 +456,7 @@ typedef int (*lbfgs_progress_t)(
     const lbfgsfloatval_t xnorm,
     const lbfgsfloatval_t gnorm,
     const lbfgsfloatval_t step,
+    const lbfgs_parameter_t param,
     int n,
     int k,
     int ls

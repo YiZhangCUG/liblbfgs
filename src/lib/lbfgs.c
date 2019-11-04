@@ -505,7 +505,7 @@ int lbfgs(
         /* Report the progress. */
         if (cd.proc_progress) {
             // 如果监控函数返回值不为0 则退出迭过程
-            if ((ret = cd.proc_progress(cd.instance, x, g, fx, xnorm, gnorm, step, cd.n, k, ls))) {
+            if ((ret = cd.proc_progress(cd.instance, x, g, fx, xnorm, gnorm, step, param, cd.n, k, ls))) {
                 goto lbfgs_exit;
             }
         }

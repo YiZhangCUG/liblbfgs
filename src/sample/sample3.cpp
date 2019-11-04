@@ -20,14 +20,14 @@ public:
 		const int n, const lbfgsfloatval_t step);
 
 	static int _Progress(void *instance, const lbfgsfloatval_t *x, const lbfgsfloatval_t *g, const lbfgsfloatval_t fx,
-		const lbfgsfloatval_t xnorm, const lbfgsfloatval_t gnorm, const lbfgsfloatval_t step,
+		const lbfgsfloatval_t xnorm, const lbfgsfloatval_t gnorm, const lbfgsfloatval_t step, const lbfgs_parameter_t param,
 		int n, int k, int ls)
 	{
-		return reinterpret_cast<TEST_FUNC*>(instance)->Progress(x, g, fx, xnorm, gnorm, step, n, k, ls);
+		return reinterpret_cast<TEST_FUNC*>(instance)->Progress(x, g, fx, xnorm, gnorm, step, param, n, k, ls);
 	}
 
 	int Progress(const lbfgsfloatval_t *x, const lbfgsfloatval_t *g, const lbfgsfloatval_t fx,
-		const lbfgsfloatval_t xnorm, const lbfgsfloatval_t gnorm, const lbfgsfloatval_t step,
+		const lbfgsfloatval_t xnorm, const lbfgsfloatval_t gnorm, const lbfgsfloatval_t step, const lbfgs_parameter_t param,
 		int n, int k, int ls);
 
 	int Routine();
@@ -67,7 +67,7 @@ lbfgsfloatval_t TEST_FUNC::Func(const lbfgsfloatval_t *x, lbfgsfloatval_t *g,
 }
 
 int TEST_FUNC::Progress(const lbfgsfloatval_t *x, const lbfgsfloatval_t *g, const lbfgsfloatval_t fx,
-		const lbfgsfloatval_t xnorm, const lbfgsfloatval_t gnorm, const lbfgsfloatval_t step,
+		const lbfgsfloatval_t xnorm, const lbfgsfloatval_t gnorm, const lbfgsfloatval_t step, const lbfgs_parameter_t param,
 		int n, int k, int ls)
 {
 	clog << "iteration times: " << k << " fx = " << fx << " gnorm/xnorm = " << gnorm/xnorm << endl;

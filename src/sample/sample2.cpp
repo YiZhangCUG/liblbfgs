@@ -87,12 +87,13 @@ protected:
         const lbfgsfloatval_t xnorm,
         const lbfgsfloatval_t gnorm,
         const lbfgsfloatval_t step,
+        const lbfgs_parameter_t param,
         int n,
         int k,
         int ls
         )
     {
-        return reinterpret_cast<objective_function*>(instance)->progress(x, g, fx, xnorm, gnorm, step, n, k, ls);
+        return reinterpret_cast<objective_function*>(instance)->progress(x, g, fx, xnorm, gnorm, step, param, n, k, ls);
     }
 
     int progress(
@@ -102,6 +103,7 @@ protected:
         const lbfgsfloatval_t xnorm,
         const lbfgsfloatval_t gnorm,
         const lbfgsfloatval_t step,
+        const lbfgs_parameter_t param,
         int n,
         int k,
         int ls
