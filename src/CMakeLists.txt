@@ -13,7 +13,7 @@ set_target_properties(lbfgs_static PROPERTIES OUTPUT_NAME "lbfgs")
 set_target_properties(lbfgs PROPERTIES CLEAN_DIRECT_OUTPUT 1)
 set_target_properties(lbfgs_static PROPERTIES CLEAN_DIRECT_OUTPUT 1)
 # 设置动态库的版本号
-set_target_properties(lbfgs PROPERTIES VERSION 1.0 SOVERSION 1.0)
+set_target_properties(lbfgs PROPERTIES VERSION 1.1 SOVERSION 1.1)
 # 设置库文件的输出地址
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 # 库的安装命令
