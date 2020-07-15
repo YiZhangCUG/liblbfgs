@@ -35,6 +35,7 @@ extern "C" {
 #endif/*__cplusplus*/
 
 // 算法库使用的浮点类型定义
+// 结合后面的定义可见我们现在使用的其实就是 double 类型
 /*
  * The default precision of floating point values is 64bit (double).
  */
@@ -204,8 +205,8 @@ enum {
 // past 以delta(不同迭代次数的目标函数值)为基础的迭代终止条件数，past代表了以多少迭代次数之前的目标函数值作为delta计算的间隔，默认值为0，
 //      即不以delta为迭代终止条件。
 // delta (f' - f) / f 不同迭代次数时目标函数之差与当前目标函数值之比，但past不为0时会计算。
-// max_iterations 最大迭代次数
-// linesearch 线性搜索方式，由此文件上部枚举类型定义。
+// max_iterations 最大迭代次数，为0时表示一直迭代到终止条件被满足或出现其他错误。
+// linesearch 线性搜索方式，由此文件前述枚举类型定义。
 // max_linesearch 每次迭代中线性搜索的最大次数，默认值为40
 // min_step 线性搜索中的最小步长，默认值为1e-20
 // max_step 线性搜索中的最大步长，默认值为1e+20
