@@ -16,6 +16,17 @@ set_target_properties(lbfgs_static PROPERTIES CLEAN_DIRECT_OUTPUT 1)
 set_target_properties(lbfgs PROPERTIES VERSION 1.1 SOVERSION 1.1)
 # 设置库文件的输出地址
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
+# 在LINUX中需添加math库
+message("Operating system: ${CMAKE_SYSTEM}")
+if(UNIX)
+	message("Linking math library.")
+	find_library(MATH_LIBRARY m)
+	find_library(MATH_A_LIBRARY libm.a)
+	target_link_libraries(lbfgs PUBLIC ${MATH_LIBRARY})
+	target_link_libraries(lbfgs_static ${MATH_A_LIBRARY})
+endif()
+# 添加编译命令
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2")
 # 库的安装命令
 install(TARGETS lbfgs lbfgs_static
 	LIBRARY DESTINATION lib
