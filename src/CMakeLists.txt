@@ -17,9 +17,9 @@ set_target_properties(lbfgs PROPERTIES VERSION 1.1 SOVERSION 1.1)
 # 设置库文件的输出地址
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 # 在LINUX中需添加math库
-message("Operating system: ${CMAKE_SYSTEM}")
-if(UNIX)
-	message("Linking math library.")
+message("-- Operating system: ${CMAKE_SYSTEM}")
+if(UNIX AND NOT APPLE)
+	message("-- Linking math library.")
 	find_library(MATH_LIBRARY m)
 	find_library(MATH_A_LIBRARY libm.a)
 	target_link_libraries(lbfgs PUBLIC ${MATH_LIBRARY})
