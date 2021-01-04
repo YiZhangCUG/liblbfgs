@@ -17,20 +17,27 @@ set_target_properties(lbfgs PROPERTIES VERSION 1.1 SOVERSION 1.1)
 # 设置库文件的输出地址
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 # 在LINUX中需添加math库
-message("-- Operating system: ${CMAKE_SYSTEM}")
 if(UNIX AND NOT APPLE)
-	message("-- Linking math library.")
+	message(STATUS "Linking math library.")
 	find_library(MATH_LIBRARY m)
 	find_library(MATH_A_LIBRARY libm.a)
 	target_link_libraries(lbfgs PUBLIC ${MATH_LIBRARY})
 	target_link_libraries(lbfgs_static ${MATH_A_LIBRARY})
 endif()
+
 # 添加编译命令
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
+
 # 库的安装命令
-install(TARGETS lbfgs lbfgs_static
+if(WIN32)
+	install(TARGETS lbfgs DESTINATION lib)
+	install(TARGETS lbfgs_static DESTINATION lib)
+else()
+	install(TARGETS lbfgs lbfgs_static
 	LIBRARY DESTINATION lib
 	ARCHIVE DESTINATION lib)
+endif()
 # 头文件安装命令
 install(FILES lib/lbfgs.h DESTINATION include)
 
@@ -38,23 +45,16 @@ install(FILES lib/lbfgs.h DESTINATION include)
 # 设置可执行文件的输出地址
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 
-# 添加可执行文件 命令行
-add_executable(lbfgs_sample sample/sample.c)
-# 为安装文件添加动态库的搜索地址
-set_target_properties(lbfgs_sample PROPERTIES INSTALL_RPATH "/usr/local/lib")
-# 链接动态库
-target_link_libraries(lbfgs_sample PUBLIC lbfgs)
+# 例子的编译方法
+macro(add_sample name file)
+	# 添加可执行文件 命令行
+	add_executable(${name} sample/${file})
+	# 为安装文件添加动态库的搜索地址 在Windows下并没有什么用 直接忽略
+	set_target_properties(${name} PROPERTIES INSTALL_RPATH "/usr/local/lib")
+	# 链接动态库
+	target_link_libraries(${name} PUBLIC lbfgs)
+endmacro()
 
-# 添加可执行文件 命令行
-add_executable(lbfgs_sample2 sample/sample2.cpp)
-# 为安装文件添加动态库的搜索地址
-set_target_properties(lbfgs_sample2 PROPERTIES INSTALL_RPATH "/usr/local/lib")
-# 链接动态库
-target_link_libraries(lbfgs_sample2 PUBLIC lbfgs)
-
-# 添加可执行文件 命令行
-add_executable(lbfgs_sample3 sample/sample3.cpp)
-# 为安装文件添加动态库的搜索地址
-set_target_properties(lbfgs_sample3 PROPERTIES INSTALL_RPATH "/usr/local/lib")
-# 链接动态库
-target_link_libraries(lbfgs_sample3 PUBLIC lbfgs)
+add_sample(lbfgs_sample sample.c)
+add_sample(lbfgs_sample2 sample2.cpp)
+add_sample(lbfgs_sample3 sample3.cpp)
